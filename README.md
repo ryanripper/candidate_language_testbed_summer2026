@@ -140,6 +140,8 @@ CI (GitHub Actions) runs both on Python 3.10 and 3.12 for every push and pull re
 │   ├── ws3-llm-scaling/               LLM ask-and-average ideological scaling
 │   ├── ws4-preanalysis/               static-embedding bake-off (w2v, GloVe,
 │   │                                  fastText, doc2vec) — informal, truth-visible
+│   ├── ws4-supervised/                supervised ideology prediction — preregistered,
+│   │                                  DEV/TEST label release; in progress
 │   └── synthesis/                     agreement matrix, Mantel/Procrustes,
 │                                      divergence cases, consolidated table
 ├── tests/                             pytest suite: metrics, generator,
@@ -162,6 +164,7 @@ Each analysis folder carries its own `scripts/` (numbered pipeline), `outputs/`,
 | `ws2-topic-bakeoff` | ✓ | ✓ | ✓ | `ws2-writeup.md` |
 | `ws3-llm-scaling` | ✓ | ✓ | ✓ | `ws3-writeup.md` |
 | `ws4-preanalysis` | ✓ | | ✓ | `ws4-preanalysis-writeup.md` |
+| `ws4-supervised` | ✓ | ✓ | ✓ | *(pending unseal)* |
 | `synthesis` | ✓ | | | `synthesis-writeup.md` |
 
 The gaps are deliberate rather than oversights: `00-embeddings-pca` is the pre-harness pilot and predates the protocol, while `ws4-preanalysis` and `synthesis` are respectively truth-visible and post-hoc, so neither had a blind result to pre-register.
@@ -192,11 +195,21 @@ Read these before quoting any number above.
 
 ## Status
 
-WS0–WS3 and the synthesis stage are complete. WS4 (supervised prediction of planted ideology) is at the preanalysis stage: its bake-off found that **every feature space saturates the generator ceiling under light ridge supervision** (out-of-fold r = .966–.973 against a ceiling of ≈ .973), which moves the interesting WS4 questions away from raw accuracy toward label efficiency, robustness, and cross-family ensembles.
+WS0–WS3 and the synthesis stage are complete. WS4 (supervised prediction of planted ideology) is in progress: the informal preanalysis found that **every feature space saturates the generator ceiling under light ridge supervision** (out-of-fold r = .966–.973 against a ceiling of ≈ .973), which moved the WS4 questions away from raw accuracy toward label efficiency, text scarcity, incumbent→challenger transfer, and cross-family ensembles. The certified workstream (`analyses/ws4-supervised/`, plan in `docs/plans/ws4-supervised-plan.md`) is preregistered with a DEV/TEST candidate split and DEV-only label release; feature spaces and the E4.1 development probes are done, and **TEST labels remain sealed** pending the remaining experiments.
 
 ## Tech stack
 
 NumPy, pandas, SciPy, scikit-learn (PCA, TF-IDF/SVD, ridge, clustering metrics), gensim (word2vec, doc2vec), sentence-transformers (MiniLM), Model2Vec (static distilled embeddings), UMAP + HDBSCAN (BERTopic-style topic entrant), matplotlib (figures), PyArrow (parquet I/O for the sealed corpus), and in-session LLM agents for the WS2 labelling and WS3 scoring steps (pilot scale; no API-calling code is committed — see Usage).
+
+## A note on AI tooling
+
+This project was built with Claude (Anthropic) as a research and coding assistant, working in a sandboxed session alongside the author. The division of labor, so the reader can weigh it:
+
+- **Author:** research questions, the extension roadmap, every decision point in the plan documents (D1–D9 — each recorded with its date and the option chosen), scope calls (testbed-first, separate per-workstream articles, deferring the LLM scale-up), review of all results and write-ups, and git history.
+- **Claude:** drafting the plan and preregistration documents from the author's decisions, writing and running the numbered pipeline scripts, the shared harness, tests and CI scaffolding, figures, and first drafts of the stage write-ups; the repo restructure (path fixes itemized in `docs/repo-restructure-notes.md`).
+- **In-session LLM agents** (also Claude) served as the *instruments under test* in WS2 (topic labelling, LLM-as-judge) and WS3 (ask-and-average scoring). They were blinded — fresh agents, identifiers stripped, no truth access — but they share a model family with the orchestrating assistant, a caveat repeated wherever those results are cited.
+
+Two consequences worth stating. First, the blind protocol was designed partly *because* an AI assistant was in the loop: the seal, the dated preregistrations, the one-read unseal scripts, and the DEV-only label release in WS4 exist so that no participant — human or model — could let the answer key steer design choices, and the hashes in `ws0-harness/seal_manifest.json` let a reader verify that. Second, the assistant's contributions are reproducible artifacts, not judgments: every number in this README comes from a committed, seed-pinned script that anyone can re-run without any AI tooling at all.
 
 ## Author
 
