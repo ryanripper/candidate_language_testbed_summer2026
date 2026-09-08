@@ -35,5 +35,13 @@
       "true_ideology"
     ]
   },
-  "protocol": "Workstreams read blind_corpus.parquet only. sealed_truth.parquet is opened once per workstream at the validation step declared in its preregistration.md, written BEFORE unsealing."
+  "protocol": "Workstreams read blind_corpus.parquet only. sealed_truth.parquet is opened once per workstream at the validation step declared in its preregistration.md, written BEFORE unsealing.",
+  "ws4_label_release": {
+    "released_on": "2026-09-08",
+    "file": "ws4_dev_labels.parquet",
+    "sha256": "0331bdfdf13acfa171149c2a7d8c9f44dd54858c52f2ecf16b6b358a3ab4df80",
+    "n_candidates": 607,
+    "scope": "DEV candidates only (ws4_splits.json); TEST labels remain sealed until analyses/ws4-supervised/scripts/07_unseal_evaluate.py",
+    "preregistration": "analyses/ws4-supervised/preregistration.md"
+  }
 }

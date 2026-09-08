@@ -74,3 +74,9 @@ analyses/00-embeddings-pca/outputs/tokenized_corpus.jsonl.gz
 analyses/00-embeddings-pca/outputs/candidate_vectors.npz
 analyses/00-embeddings-pca/outputs/pca_scores.npz
 analyses/00-embeddings-pca/outputs/distance_matrix_*.npy
+
+# WS4 supervised: tweet-level caches + doc2vec model + fitted models (~310 MB),
+# rebuilt by analyses/ws4-supervised/scripts/01_features.py and 02_probes.py
+analyses/ws4-supervised/intermediate/
+# WS4 DEV-only label release (derived from sealed truth; rebuilt by ws0-harness/06_label_release.py)
+ws0-harness/ws4_dev_labels.parquet
