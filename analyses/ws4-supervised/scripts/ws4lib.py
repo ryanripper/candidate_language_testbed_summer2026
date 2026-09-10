@@ -4,9 +4,13 @@ ws4lib.py — shared helpers for the WS4 supervised workstream.
 Paths, split loading, the DEV-only label loader, candidate-feature
 construction from tweet-level caches (so any tweet subset can be
 featurized), and the ridge / GBM fitting primitives used by scripts 02–07.
+Addendum B (2026-09-10) helpers for 08_conformal.py / 09_active_learning.py
+live at the bottom (`SEED_B`, conformal quantile, ridge predictive variance,
+k-center greedy) and are purely additive: nothing above them changed after
+02_probes.py was run on 2026-09-08.
 
 Truth discipline: `load_dev_labels()` is the only label accessor used by
-scripts 01–06. `sealed_truth.parquet` is touched exclusively by
+scripts 01–06, 08 and 09. `sealed_truth.parquet` is touched exclusively by
 07_unseal_evaluate.py.
 """
 
@@ -34,7 +38,8 @@ for d in (INTER, OUT, FIG):
 sys.path.insert(0, str(WS0))
 import metrics  # noqa: E402  (ws0-harness/metrics.py)
 
-SEED = 20260908
+SEED = 20260908      # preregistration §2/§3/§7 (2026-09-08): splits, draws in 03–06, paired bootstrap
+SEED_B = 20260910    # Addendum B (2026-09-10): E4.7/E4.8 draws in 08/09 only — never reuse for §3 bootstraps
 DIM = 100
 SPACES = ["tfidf", "w2v", "doc2vec", "m2v", "behav"]
 CONTENT = ["tfidf", "doc2vec"]
@@ -181,14 +186,18 @@ class Featurizer:
 ALPHAS = np.logspace(-3, 3, 13)
 
 
-def fit_ridge(X: np.ndarray, y: np.ndarray, folds: np.ndarray | None = None):
-    """Standardize + RidgeCV with inner folds (or 5-fold KFold if folds is None)."""
+def fit_ridge(X: np.ndarray, y: np.ndarray, folds: np.ndarray | None = None, n_splits: int = 5):
+    """Standardize + RidgeCV with inner folds (or `n_splits`-fold KFold if folds is None).
+
+    `n_splits` defaults to 5 (preregistration §2). Addendum B §B.2 re-selects α by
+    3-fold CV inside the active-learning labeled set (5-fold undefined below n = 15);
+    09_active_learning.py passes n_splits=3. Existing callers are unaffected."""
     from sklearn.linear_model import RidgeCV
     from sklearn.model_selection import KFold, PredefinedSplit
     from sklearn.pipeline import make_pipeline
     from sklearn.preprocessing import StandardScaler
 
-    cv = PredefinedSplit(folds) if folds is not None else KFold(5, shuffle=True, random_state=SEED)
+    cv = PredefinedSplit(folds) if folds is not None else KFold(n_splits, shuffle=True, random_state=SEED)
     model = make_pipeline(StandardScaler(), RidgeCV(alphas=ALPHAS, cv=cv))
     return model.fit(X, y)
 
@@ -245,3 +254,100 @@ def paired_bootstrap_dr(pred_a: np.ndarray, pred_b: np.ndarray, truth: np.ndarra
     d = np.array(d)
     return {"dr": float(np.corrcoef(pred_a, truth)[0, 1] - np.corrcoef(pred_b, truth)[0, 1]),
             "lo": float(np.percentile(d, 2.5)), "hi": float(np.percentile(d, 97.5))}
+
+
+# =====================================================================
+# Addendum B (2026-09-10) — helpers for 08_conformal.py / 09_active_learning.py
+# Additive only; nothing above this line changed after 02_probes.py ran.
+# =====================================================================
+
+CONFORMAL_ALPHAS = (0.10, 0.05)                      # §B.1 step 2
+CONFORMAL_SPACES = ["tfidf", "doc2vec", "w2v", "m2v", "m2v_strip", "behav"]  # §B.1; + "stack_all" from 06
+AL_SPACES = ["tfidf", "doc2vec", "m2v_strip", "behav"]                       # §B.2
+AL_STRATEGIES = ("random", "uncertainty", "diversity", "hybrid")             # §B.2, fixed list
+AL_N0, AL_BATCH, AL_NMAX, AL_DRAWS, AL_HYBRID_SWITCH = 10, 5, 60, 20, 4      # §B.2 protocol
+
+
+def conformal_quantile(abs_resid: np.ndarray, alpha: float) -> float:
+    """Split-conformal q̂_α (Addendum B §B.1 step 2): the ⌈(n+1)(1−α)⌉/n empirical
+    quantile of calibration scores |y − ŷ|, with the finite-sample correction.
+    Scores are the frozen inner-fold OOF residuals from outputs/e41_dev_oof.csv
+    (single spaces) or 06_ensemble.py (cross-family stack). Mildly conservative
+    because the refit model sees 5/4 the data of each fold model — stated, not
+    corrected (§B.1)."""
+    s = np.sort(np.asarray(abs_resid, dtype=float))
+    n = len(s)
+    k = int(np.ceil((n + 1) * (1 - alpha)))
+    if k > n:
+        return float("inf")
+    return float(s[k - 1])
+
+
+def coverage_ci(hits: int, n: int, level: float = 0.95) -> tuple[float, float]:
+    """Clopper–Pearson interval for empirical coverage (§B.1 metrics)."""
+    from scipy.stats import beta
+    lo = 0.0 if hits == 0 else float(beta.ppf((1 - level) / 2, hits, n - hits + 1))
+    hi = 1.0 if hits == n else float(beta.ppf(1 - (1 - level) / 2, hits + 1, n - hits))
+    return lo, hi
+
+
+def ridge_predictive_variance(model, X_pool: np.ndarray) -> np.ndarray:
+    """`uncertainty` query score (Addendum B §B.2): xᵀ(XᵀX + αI)⁻¹x on the
+    standardized features, the Bayesian-ridge reading of a fitted `fit_ridge`
+    pipeline (StandardScaler → RidgeCV). Uses the α RidgeCV selected and the
+    training design cached on the scaler-standardized labeled set, which the
+    caller must pass via `model.X_train_std_` (set by `fit_ridge_al`)."""
+    scaler, ridge = model.named_steps["standardscaler"], model.named_steps["ridgecv"]
+    Z = scaler.transform(X_pool)
+    Xtr = model.X_train_std_
+    A = Xtr.T @ Xtr + ridge.alpha_ * np.eye(Xtr.shape[1])
+    Ainv = np.linalg.pinv(A)
+    return np.einsum("ij,jk,ik->i", Z, Ainv, Z)
+
+
+def fit_ridge_al(X: np.ndarray, y: np.ndarray):
+    """Active-learning learner (§B.2): the primary ridge with α by 3-fold CV inside
+    the labeled set. Caches the standardized training design for
+    `ridge_predictive_variance`."""
+    m = fit_ridge(X, y, folds=None, n_splits=3)
+    m.X_train_std_ = m.named_steps["standardscaler"].transform(X)
+    return m
+
+
+def kcenter_greedy(Z: np.ndarray, labeled: np.ndarray, n_query: int) -> np.ndarray:
+    """`diversity` query rule (Addendum B §B.2): k-center greedy / farthest-first in
+    the standardized feature space Z. `labeled` = boolean mask of already-labeled
+    rows; returns indices of `n_query` new rows, each the pool point farthest from
+    the current labeled set."""
+    Z = np.asarray(Z, dtype=float)
+    lab = labeled.copy()
+    if lab.sum() == 0:
+        raise ValueError("kcenter_greedy needs a non-empty seed set (§B.2 n₀ = 10)")
+    d_min = np.min(((Z[:, None, :] - Z[None, lab, :]) ** 2).sum(-1), axis=1)
+    picks = []
+    for _ in range(n_query):
+        d_min[lab] = -np.inf
+        j = int(np.argmax(d_min))
+        picks.append(j)
+        lab[j] = True
+        d_min = np.minimum(d_min, ((Z - Z[j]) ** 2).sum(-1))
+    return np.array(picks)
+
+
+def stratified_seed_set(strata: np.ndarray, pool_idx: np.ndarray, n0: int,
+                        rng: np.random.Generator) -> np.ndarray:
+    """§B.2 seed set: n₀ candidates stratified on party × chamber (`strata` = string
+    key per pool row), round-robin over strata in shuffled order."""
+    order = rng.permutation(len(pool_idx))
+    by = {}
+    for i in order:
+        by.setdefault(strata[i], []).append(pool_idx[i])
+    keys = list(by.keys())
+    rng.shuffle(keys)
+    out, k = [], 0
+    while len(out) < n0 and any(by.values()):
+        key = keys[k % len(keys)]
+        if by[key]:
+            out.append(by[key].pop())
+        k += 1
+    return np.array(out[:n0])

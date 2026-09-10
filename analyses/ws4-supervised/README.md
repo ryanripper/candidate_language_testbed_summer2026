@@ -2,10 +2,15 @@
 
 Plan: [`docs/plans/ws4-supervised-plan.md`](../../docs/plans/ws4-supervised-plan.md).
 Preregistration: [`preregistration.md`](preregistration.md) (locked 2026-09-08,
-before label release; Addendum A dated the same day, pre-unseal).
+before label release; Addendum A dated the same day, pre-unseal; Addendum B
+dated 2026-09-10, pre-unseal — adds E4.7 conformal coverage and E4.8 active
+learning, seed 20260910).
 
-**Status (2026-09-08): session 1 of 3 complete.** Harness extended, features
-built, E4.1 run on DEV inner folds. **TEST labels are still sealed.**
+**Status (2026-09-10): session 1 of 3 complete.** Harness extended, features
+built, E4.1 run on DEV inner folds. Addendum B added; no session-1 output
+needed regeneration (its inputs are the frozen inner-fold OOF residuals in
+`outputs/e41_dev_oof.csv` and the full-DEV ridge models in
+`intermediate/e41_models.joblib`). **TEST labels are still sealed.**
 
 ## Protocol
 
@@ -26,8 +31,21 @@ built, E4.1 run on DEV inner folds. **TEST labels are still sealed.**
 | 04 | `04_text_scarcity.py` | DEV | todo (E4.3) |
 | 05 | `05_extrapolation.py` | DEV | todo (E4.4) |
 | 06 | `06_ensemble.py` | DEV | todo (E4.5, E4.6) |
-| 07 | `07_unseal_evaluate.py` | **TEST, once** | todo |
-| 08 | `08_figures.py` | — | todo |
+| 08 | `08_conformal.py` | DEV | todo (E4.7, Addendum B §B.1) — q̂ table from E4.1/E4.5 OOF residuals; DEV OOF coverage sanity check |
+| 09 | `09_active_learning.py` | DEV | todo (E4.8, Addendum B §B.2) — four strategies on inner folds; frozen n = 40 model picks |
+| 07 | `07_unseal_evaluate.py` | **TEST, once** | todo — also applies the frozen q̂ table and scores the n = 40 AL models (Addendum B §B.3) |
+| 10 | `10_figures.py` | — | todo (was `08_figures.py`; renumbered when Addendum B claimed 08/09) |
+
+**Pipeline order** (Addendum B §B.3: 08 and 09 run *before* 07; numbering
+after 07 marks them as additions, not as post-unseal steps):
+
+```
+01 → 02 → 03 → 04 → 05 → 06 → 08 → 09 → [freeze figure specs] → 07 → 10
+```
+
+Seeds: `ws4lib.SEED = 20260908` for everything preregistered on 2026-09-08
+(splits, draws in 03–06, paired bootstrap §3); `ws4lib.SEED_B = 20260910` for
+the Addendum B draws in 08/09 only.
 
 ## E4.1 on DEV (out-of-fold, ridge unless noted) — development numbers, not the certified result
 
