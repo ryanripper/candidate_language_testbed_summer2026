@@ -18,3 +18,21 @@ python 02_probes.py            # E4.1 on DEV inner folds
 
 Seeds: 20260720 for the w2v / TF-IDF anchors, 20260908 otherwise. gensim runs
 `workers=1` with a crc32 hashfxn — do not raise `workers`.
+
+## Session 2 additions (2026-09-15)
+
+`intermediate/` grew to ≈1 GB: `e43_schedule.npz` + `e43_doc2vec/` (per-draw
+doc2vec inference), `e44_models.joblib` (≈250 MB, GBM controls), `e45_meta.joblib`,
+per-stage checkpoints `e4*_partial_*.joblib` / `e4x_pred_*.joblib`, and
+`test_predictions.joblib` (the frozen TEST predictions 07 scores). To rebuild:
+
+```bash
+cd analyses/ws4-supervised/scripts
+python 03_label_efficiency.py; python 04_text_scarcity.py; python 05_extrapolation.py
+python 06_ensemble.py; python 08_conformal.py; python 09_active_learning.py
+python 07a_freeze_predictions.py          # label-free; ~25 min total
+python 07_unseal_evaluate.py --dry-run    # exercises 07 without opening sealed_truth
+```
+
+Each script resumes from its checkpoints; re-run until it prints its summary.
+`outputs/*.csv|json` (schedules, DEV summaries, q̂ table, AL picks) are committed.

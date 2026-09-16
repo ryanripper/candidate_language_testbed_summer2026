@@ -305,3 +305,60 @@ stack's OOF predictions are still to come (06).
    Independent status come from `ws0-harness/baselines/candidate_metadata.csv`;
    text-volume quartiles are cut on `n_tweets` from the same file, computed
    over TEST candidates at unseal.
+
+---
+
+## Addendum C — 2026-09-15 (pre-unseal; TEST untouched)
+
+*Recorded after scripts 03–06, 08, 09 ran on DEV and `figure_specs.md` was
+frozen; before `07_unseal_evaluate.py` has opened `sealed_truth.parquet`.
+Implementation clarifications only — no bar, metric, learner, space, seed or
+draw schedule changes. DEV development numbers are recorded in `README.md`
+for honesty; none of them is a result.*
+
+1. **Predictions are frozen before the read.** A label-free script,
+   `07a_freeze_predictions.py`, (re)fits every frozen model on DEV — stored
+   models from 02/05/06, deterministic refits from the frozen draw schedules
+   of 03/04/09 — and stores its predictions for the 303 TEST candidates
+   (`intermediate/test_predictions.joblib`, 7,416 arrays, gitignored).
+   `07_unseal_evaluate.py` fits nothing: it reads TEST truth once, scores the
+   frozen arrays, applies §5 / Addendum B bars and writes `decision.json` plus a
+   `ws4_unseal` entry in `seal_manifest.json`. Reason: the sandbox caps a call
+   at ≈3 min, so a single uninterrupted script could not both refit ≈4,000
+   models and be the one TEST read; freezing first is also the stronger
+   protocol (no model can change after truth is seen). The pipeline order
+   becomes 01→02→03→04→05→06→08→09→(freeze figure specs)→07a→07→10.
+2. **E4.2 / E4.3 / E4.8 refits are deterministic** (RidgeCV over a fixed
+   KFold seeded by `SEED`; `HistGradientBoostingRegressor(random_state=SEED)`;
+   doc2vec inference seeded per candidate), so the frozen schedules
+   (`outputs/e42_draw_schedule.json`, `intermediate/e43_schedule.npz`,
+   `outputs/e48_n40_picks.json`) freeze the models. E4.3's TEST candidates are
+   featurized from the *same* per-draw subsets that DEV used (schedule covers
+   all 910 candidates; no labels involved).
+3. **E4.2 GBM at n ≤ 40 is degenerate** (early-stopping validation split of
+   1–4 rows → constant predictions; r undefined). Reported as `n_degenerate`
+   and excluded from medians via `nanmedian`; the primary learner is ridge and
+   the E4.2 bar is evaluated on ridge only.
+4. **E4.4 Δr estimator.** r(control) is the median over the 50 control models;
+   the paired bootstrap resamples TEST candidates and recomputes that median
+   inside every resample (`05_extrapolation.control_delta_r`). The bar is
+   evaluated on the ridge content spaces (`tfidf`, `doc2vec`), incumbent →
+   challenger axis; chamber and other spaces are reported alongside.
+5. **E4.7(a) scarcity shift** = the full-DEV, full-volume ridge from E4.1
+   applied to TEST candidates featurized from k = 25 tweets (mixed regime;
+   the 20 E4.3 draws), q̂ from §B.1 held fixed; coverage reported as the mean
+   over the 20 draws with min/max. (Not the E4.3 k = 25-trained model, which
+   is a different question.) E4.7(b) follows §B.4(1); the all-DEV model's
+   coverage on the same challengers is reported as context.
+6. **E4.5 DEV meta-OOF and E4.7 stack calibration** use the second-level OOF
+   over the same inner folds (meta fit on four folds' base-OOF predictions,
+   applied to the fifth); stated optimism as in `06_ensemble.py`.
+7. **E4.8 n\*_AL** uses the space's E4.1 DEV OOF r as the "full-DEV r" (the
+   DEV-side definition, as §B.2's curves are DEV inner-fold numbers by
+   design); `-1` records "not reached by n = 60". The bar's n\* clause cannot
+   be met if `random` itself does not reach n\* by 60 — reported as "no
+   reach" per §B.2's last paragraph, not as a strategy failure.
+8. **Library change** (`ws4lib.Featurizer.features`): optional `cands=` and
+   `n_threads=` arguments (doc2vec inference over per-thread model copies,
+   seeded per candidate exactly as the serial path; verified bit-identical).
+   Default behaviour unchanged.
