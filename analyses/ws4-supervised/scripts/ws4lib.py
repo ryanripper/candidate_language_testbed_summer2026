@@ -158,22 +158,47 @@ class Featurizer:
         return rows
 
     def features(self, space: str, rows_by_cand: dict[str, np.ndarray],
-                 behav_split_a_only: bool = True) -> np.ndarray:
+                 behav_split_a_only: bool = True, cands: list[str] | None = None,
+                 n_threads: int = 1) -> np.ndarray:
+        """Rows follow `cands` (default: all 910 in metadata order). `n_threads` > 1
+        parallelizes doc2vec inference over per-thread model copies, each seeded per
+        candidate exactly as the serial path — output is bit-identical (verified
+        2026-09-15); added for 04_text_scarcity.py's 240 refeaturizations."""
+        cands = self.cands if cands is None else cands
         if space in ("tfidf", "w2v", "m2v", "m2v_strip"):
-            return np.vstack([_mean_rows(self.cache[space], rows_by_cand[c]) for c in self.cands])
+            return np.vstack([_mean_rows(self.cache[space], rows_by_cand[c]) for c in cands])
         if space == "doc2vec":
             if self.tokens is None:
                 self.tokens = self.blind.text.astype(str).map(tokenize).tolist()
-            vecs = []
-            for c in self.cands:
-                toks = [t for r in rows_by_cand[c] for t in self.tokens[r]]
-                self.d2v.random.seed(SEED)  # deterministic inference
-                vecs.append(self.d2v.infer_vector(toks, epochs=50))
-            return np.vstack(vecs).astype(np.float32)
+            toks = [[t for r in rows_by_cand[c] for t in self.tokens[r]] for c in cands]
+            if n_threads <= 1:
+                vecs = []
+                for tk in toks:
+                    self.d2v.random.seed(SEED)  # deterministic inference
+                    vecs.append(self.d2v.infer_vector(tk, epochs=50))
+                return np.vstack(vecs).astype(np.float32)
+            from concurrent.futures import ThreadPoolExecutor
+            from gensim.models import Doc2Vec
+            models = [Doc2Vec.load(str(INTER / "doc2vec.model")) for _ in range(n_threads)]
+
+            def _infer(args):
+                j, idx = args
+                out = []
+                for i in idx:
+                    models[j].random.seed(SEED)
+                    out.append(models[j].infer_vector(toks[i], epochs=50))
+                return idx, np.vstack(out)
+
+            X = np.zeros((len(toks), DIM), dtype=np.float32)
+            chunks = [ch for ch in np.array_split(np.arange(len(toks)), n_threads) if len(ch)]
+            with ThreadPoolExecutor(len(chunks)) as ex:
+                for idx, V in ex.map(_infer, list(enumerate(chunks))):
+                    X[idx] = V
+            return X
         if space == "behav":
             is_a = (self.blind.split.to_numpy() == "A")
             out = []
-            for c in self.cands:
+            for c in cands:
                 rows = rows_by_cand[c]
                 if behav_split_a_only:
                     rows = rows[is_a[rows]]
