@@ -1,0 +1,249 @@
+{
+ "mode": "unseal",
+ "date": "2026-10-09",
+ "n_test": 303,
+ "bars": {
+  "E4.1": {
+   "bar": "ridge tfidf and doc2vec r >= .965 on TEST",
+   "tfidf_r": 0.9742886388072063,
+   "doc2vec_r": 0.9743721261409424,
+   "met": true,
+   "m2v_minus_m2v_strip": {
+    "dr": 0.006675275103862677,
+    "lo": 0.003853859503418483,
+    "hi": 0.009673319041319958
+   }
+  },
+  "E4.2": {
+   "bar": ">= 1 space with n* <= 40 (ridge)",
+   "n_star": {
+    "behav|gbm": 80,
+    "behav|ridge": 40,
+    "doc2vec|gbm": "> 320",
+    "doc2vec|ridge": 160,
+    "m2v|gbm": 320,
+    "m2v|ridge": 160,
+    "m2v_strip|gbm": 160,
+    "m2v_strip|ridge": 160,
+    "tfidf|gbm": 80,
+    "tfidf|ridge": 320,
+    "w2v|gbm": 320,
+    "w2v|ridge": 160
+   },
+   "met": true,
+   "zero_label_reference_tfidf_pc1_r": 0.9757180902034851
+  },
+  "E4.3": {
+   "bar": "best content space (tfidf/doc2vec ridge) median r >= .90 at k = 25 mixed",
+   "value": 0.9382401354114747,
+   "met": true
+  },
+  "E4.4": {
+   "bar": "|\u0394r| < .01 with CI covering 0 (incumbent\u2192challenger, ridge content spaces)",
+   "per_space": {
+    "tfidf": {
+     "dr": -0.0024442961751725,
+     "lo": -0.007308187080941708,
+     "hi": 0.0017537016188720373
+    },
+    "doc2vec": {
+     "dr": 0.001504554781048717,
+     "lo": -0.0028382755038485084,
+     "hi": 0.0070082513419203055
+    }
+   },
+   "met": true
+  },
+  "E4.5": {
+   "bar": "stack_all beats best single (CI excl. 0) AND beats behavioral split-A reference",
+   "best_single": "m2v",
+   "stack_all_r": 0.9860944706323448,
+   "dr_vs_best_single": [
+    0.004555383330119511,
+    0.0025940973902933403,
+    0.00673149852936085
+   ],
+   "dr_vs_behav_ref": [
+    0.01691206935846512,
+    0.010766105250479075,
+    0.023960449295664304
+   ],
+   "met": true
+  },
+  "E4.7": {
+   "bar": "tfidf and doc2vec marginal coverage at \u03b1=.10 in [.86, .94]",
+   "coverage": {
+    "tfidf": 0.9141914191419142,
+    "doc2vec": 0.9306930693069307
+   },
+   "met": true
+  },
+  "E4.8": {
+   "bar": "on >= 1 content space, diversity or hybrid n*_AL <= .75 x random n*_AL AND AULC \u0394 CI > 0 (DEV inner folds, \u00a7B.2)",
+   "dev_table": [
+    {
+     "space": "tfidf",
+     "strategy": "random",
+     "aulc": 0.6383,
+     "d_vs_random": 0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "n_curves": 100,
+     "n_star_al": -1
+    },
+    {
+     "space": "tfidf",
+     "strategy": "uncertainty",
+     "aulc": 0.6878,
+     "d_vs_random": 0.0495,
+     "lo": 0.0371,
+     "hi": 0.0626,
+     "n_curves": 100,
+     "n_star_al": -1
+    },
+    {
+     "space": "tfidf",
+     "strategy": "diversity",
+     "aulc": 0.6531,
+     "d_vs_random": 0.0148,
+     "lo": 0.003,
+     "hi": 0.0269,
+     "n_curves": 100,
+     "n_star_al": -1
+    },
+    {
+     "space": "tfidf",
+     "strategy": "hybrid",
+     "aulc": 0.6703,
+     "d_vs_random": 0.032,
+     "lo": 0.0198,
+     "hi": 0.0435,
+     "n_curves": 100,
+     "n_star_al": -1
+    },
+    {
+     "space": "doc2vec",
+     "strategy": "random",
+     "aulc": 0.8943,
+     "d_vs_random": 0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "n_curves": 100,
+     "n_star_al": -1
+    },
+    {
+     "space": "doc2vec",
+     "strategy": "uncertainty",
+     "aulc": 0.8823,
+     "d_vs_random": -0.012,
+     "lo": -0.0159,
+     "hi": -0.0082,
+     "n_curves": 100,
+     "n_star_al": -1
+    },
+    {
+     "space": "doc2vec",
+     "strategy": "diversity",
+     "aulc": 0.8804,
+     "d_vs_random": -0.0138,
+     "lo": -0.0176,
+     "hi": -0.0102,
+     "n_curves": 100,
+     "n_star_al": -1
+    },
+    {
+     "space": "doc2vec",
+     "strategy": "hybrid",
+     "aulc": 0.8828,
+     "d_vs_random": -0.0114,
+     "lo": -0.015,
+     "hi": -0.0079,
+     "n_curves": 100,
+     "n_star_al": -1
+    },
+    {
+     "space": "m2v_strip",
+     "strategy": "random",
+     "aulc": 0.9054,
+     "d_vs_random": 0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "n_curves": 100,
+     "n_star_al": -1
+    },
+    {
+     "space": "m2v_strip",
+     "strategy": "uncertainty",
+     "aulc": 0.9033,
+     "d_vs_random": -0.002,
+     "lo": -0.0054,
+     "hi": 0.0013,
+     "n_curves": 100,
+     "n_star_al": -1
+    },
+    {
+     "space": "m2v_strip",
+     "strategy": "diversity",
+     "aulc": 0.9055,
+     "d_vs_random": 0.0002,
+     "lo": -0.0028,
+     "hi": 0.003,
+     "n_curves": 100,
+     "n_star_al": -1
+    },
+    {
+     "space": "m2v_strip",
+     "strategy": "hybrid",
+     "aulc": 0.9037,
+     "d_vs_random": -0.0017,
+     "lo": -0.0046,
+     "hi": 0.0013,
+     "n_curves": 100,
+     "n_star_al": -1
+    },
+    {
+     "space": "behav",
+     "strategy": "random",
+     "aulc": 0.9388,
+     "d_vs_random": 0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "n_curves": 100,
+     "n_star_al": 30
+    },
+    {
+     "space": "behav",
+     "strategy": "uncertainty",
+     "aulc": 0.9363,
+     "d_vs_random": -0.0025,
+     "lo": -0.0057,
+     "hi": 0.0011,
+     "n_curves": 100,
+     "n_star_al": 35
+    },
+    {
+     "space": "behav",
+     "strategy": "diversity",
+     "aulc": 0.9283,
+     "d_vs_random": -0.0106,
+     "lo": -0.0135,
+     "hi": -0.0075,
+     "n_curves": 100,
+     "n_star_al": 45
+    },
+    {
+     "space": "behav",
+     "strategy": "hybrid",
+     "aulc": 0.9317,
+     "d_vs_random": -0.0072,
+     "lo": -0.0099,
+     "hi": -0.0042,
+     "n_curves": 100,
+     "n_star_al": 40
+    }
+   ],
+   "met": false,
+   "note": "n*_AL = -1 means not reached by n = 60 for any strategy \u2192 'no room / no reach' rather than a strategy effect"
+  }
+ }
+}

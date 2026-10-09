@@ -1,0 +1,102 @@
+/sessions/rcw-014sqfklaylydwrx3hhvb54s/mnt/4. Claude - Data Science Skills and Methods/candidate-language-testbed/analyses/ws4-supervised/scripts/ws4lib.py:262: ConstantInputWarning: An input array is constant; the correlation coefficient is not defined.
+  "r": float(pearsonr(pred, truth)[0]),
+/sessions/rcw-014sqfklaylydwrx3hhvb54s/mnt/4. Claude - Data Science Skills and Methods/candidate-language-testbed/analyses/ws4-supervised/scripts/ws4lib.py:263: ConstantInputWarning: An input array is constant; the correlation coefficient is not defined.
+  "rho": float(spearmanr(pred, truth)[0]),
+/usr/local/lib/python3.10/dist-packages/numpy/lib/_nanfunctions_impl.py:1409: RuntimeWarning: All-NaN slice encountered
+  return _nanquantile_unchecked(
+                   space      variant learner      r    rho   rmse
+                   tfidf          raw   ridge 0.9743 0.9450 0.1428
+                   tfidf          raw     gbm 0.9751 0.9448 0.1408
+                   tfidf    styleproj   ridge 0.9668 0.9299 0.1623
+                     w2v          raw   ridge 0.9695 0.9358 0.1556
+                     w2v          raw     gbm 0.9377 0.8915 0.2201
+                     w2v    styleproj   ridge 0.9497 0.9174 0.1988
+                 doc2vec          raw   ridge 0.9744 0.9505 0.1426
+                 doc2vec          raw     gbm 0.9051 0.8661 0.2798
+                 doc2vec    styleproj   ridge 0.9735 0.9500 0.1451
+                     m2v          raw   ridge 0.9815 0.9573 0.1226
+                     m2v          raw     gbm 0.9489 0.9095 0.2028
+                     m2v    styleproj   ridge 0.9784 0.9523 0.1325
+                   behav          raw   ridge 0.9675 0.9349 0.1601
+                   behav          raw     gbm 0.9716 0.9474 0.1499
+                   behav    styleproj   ridge 0.9675 0.9345 0.1603
+               tfidf_doc          raw   ridge 0.9735 0.9437 0.1455
+               tfidf_doc          raw     gbm 0.9759 0.9438 0.1385
+               tfidf_doc    styleproj   ridge 0.9733 0.9435 0.1461
+               m2v_strip          raw   ridge 0.9749 0.9425 0.1421
+               m2v_strip          raw     gbm 0.9325 0.8887 0.2285
+               m2v_strip    styleproj   ridge 0.9582 0.9133 0.1818
+        tfidf_pc1_frozen unsupervised       - 0.9757 0.9489 0.3819
+behav_splitA_source_mean unsupervised       - 0.9692 0.9378 0.1609
+
+E4.2 n* on TEST: {'behav|gbm': 80, 'behav|ridge': 40, 'doc2vec|gbm': '> 320', 'doc2vec|ridge': 160, 'm2v|gbm': 320, 'm2v|ridge': 160, 'm2v_strip|gbm': 160, 'm2v_strip|ridge': 160, 'tfidf|gbm': 80, 'tfidf|ridge': 320, 'w2v|gbm': 320, 'w2v|ridge': 160}
+
+E4.3 best content r at k=25 mixed: 0.9382
+
+E4.4:
+      axis     space learner  shift_r  control_median_r   dr_dr   dr_lo   dr_hi
+incumbency     tfidf   ridge   0.9669            0.9645 -0.0024 -0.0073  0.0018
+incumbency     tfidf     gbm   0.9685            0.9726  0.0041  0.0006  0.0067
+incumbency       w2v   ridge   0.9660            0.9624 -0.0036 -0.0073  0.0008
+incumbency       w2v     gbm   0.9265            0.9051 -0.0214 -0.0352 -0.0079
+incumbency   doc2vec   ridge   0.9649            0.9664  0.0015 -0.0028  0.0070
+incumbency   doc2vec     gbm   0.8635            0.8770  0.0134 -0.0119  0.0401
+incumbency       m2v   ridge   0.9700            0.9743  0.0043  0.0006  0.0080
+incumbency       m2v     gbm   0.9226            0.9245  0.0019 -0.0114  0.0170
+incumbency     behav   ridge   0.9705            0.9705  0.0000 -0.0062  0.0050
+incumbency     behav     gbm   0.9718            0.9720  0.0002 -0.0050  0.0045
+incumbency m2v_strip   ridge   0.9668            0.9679  0.0011 -0.0025  0.0047
+incumbency m2v_strip     gbm   0.9156            0.9189  0.0034 -0.0069  0.0147
+   chamber     tfidf   ridge   0.9801            0.9793 -0.0009 -0.0031  0.0013
+   chamber     tfidf     gbm   0.9771            0.9781  0.0010 -0.0019  0.0051
+   chamber       w2v   ridge   0.9825            0.9813 -0.0012 -0.0030  0.0006
+   chamber       w2v     gbm   0.9329            0.9324 -0.0005 -0.0231  0.0335
+   chamber   doc2vec   ridge   0.9855            0.9857  0.0002 -0.0010  0.0019
+   chamber   doc2vec     gbm   0.8715            0.9212  0.0498 -0.0213  0.1477
+   chamber       m2v   ridge   0.9861            0.9855 -0.0005 -0.0030  0.0023
+   chamber       m2v     gbm   0.9474            0.9594  0.0120 -0.0100  0.0432
+   chamber     behav   ridge   0.9845            0.9844 -0.0000 -0.0007  0.0006
+   chamber     behav     gbm   0.9887            0.9881 -0.0006 -0.0027  0.0021
+   chamber m2v_strip   ridge   0.9827            0.9815 -0.0011 -0.0035  0.0015
+   chamber m2v_strip     gbm   0.9544            0.9486 -0.0058 -0.0160  0.0069
+
+E4.5:
+            stack   n      r    rho   rmse  dr_vs_best_single(m2v)  dr_vs_best_single(m2v)_lo  dr_vs_best_single(m2v)_hi  dr_vs_behav_ref  dr_vs_behav_ref_lo  dr_vs_behav_ref_hi
+    stack_content 303 0.9788 0.9551 0.1302                 -0.0027                    -0.0053                     0.0001           0.0096              0.0022              0.0179
+      stack_style 303 0.9850 0.9642 0.1102                  0.0035                     0.0013                     0.0057           0.0158              0.0102              0.0225
+        stack_all 303 0.9861 0.9670 0.1062                  0.0046                     0.0026                     0.0067           0.0169              0.0108              0.0240
+    stack_all@150 303 0.9854 0.9655 0.1090                     NaN                        NaN                        NaN              NaN                 NaN                 NaN
+stack_all+llm@150  52 0.9839 0.9646 0.1194                     NaN                        NaN                        NaN              NaN                 NaN                 NaN
+    llm_alone@150  52 0.9728 0.9179 0.1664                     NaN                        NaN                        NaN              NaN                 NaN                 NaN
+        tfidf@150  52 0.9772 0.9490 0.1401                     NaN                        NaN                        NaN              NaN                 NaN                 NaN
+          w2v@150  52 0.9653 0.9330 0.1734                     NaN                        NaN                        NaN              NaN                 NaN                 NaN
+      doc2vec@150  52 0.9706 0.9413 0.1617                     NaN                        NaN                        NaN              NaN                 NaN                 NaN
+          m2v@150  52 0.9807 0.9547 0.1302                     NaN                        NaN                        NaN              NaN                 NaN                 NaN
+        behav@150  52 0.9574 0.9188 0.1918                     NaN                        NaN                        NaN              NaN                 NaN                 NaN
+residual correlations (TEST):
+          tfidf    w2v  doc2vec    m2v  behav
+tfidf    1.000  0.832    0.646  0.796  0.365
+w2v      0.832  1.000    0.632  0.750  0.263
+doc2vec  0.646  0.632    1.000  0.549  0.271
+m2v      0.796  0.750    0.549  1.000  0.287
+behav    0.365  0.263    0.271  0.287  1.000
+
+E4.7 marginal coverage:
+    model  alpha condition  coverage  ci_lo  ci_hi   n  qhat  width_rel_sd
+    tfidf   0.10  marginal     0.914  0.877  0.943 303 0.238         0.753
+    tfidf   0.05  marginal     0.950  0.920  0.972 303 0.295         0.935
+  doc2vec   0.10  marginal     0.931  0.896  0.957 303 0.253         0.802
+  doc2vec   0.05  marginal     0.974  0.949  0.989 303 0.324         1.026
+      w2v   0.10  marginal     0.908  0.869  0.938 303 0.273         0.864
+      w2v   0.05  marginal     0.957  0.928  0.977 303 0.327         1.035
+      m2v   0.10  marginal     0.927  0.892  0.954 303 0.223         0.707
+      m2v   0.05  marginal     0.964  0.936  0.982 303 0.272         0.862
+m2v_strip   0.10  marginal     0.944  0.912  0.967 303 0.265         0.839
+m2v_strip   0.05  marginal     0.957  0.928  0.977 303 0.308         0.976
+    behav   0.10  marginal     0.921  0.884  0.949 303 0.272         0.862
+    behav   0.05  marginal     0.964  0.936  0.982 303 0.345         1.094
+stack_all   0.10  marginal     0.941  0.908  0.964 303 0.194         0.614
+stack_all   0.05  marginal     0.967  0.940  0.984 303 0.234         0.741
+
+[log truncated by pipe after E4.7; E4.8 and BARS recovered from outputs/decision.json and outputs/e48_test_n40.csv]
+BARS: E4.1 T, E4.2 T, E4.3 T, E4.4 T, E4.5 T, E4.7 T, E4.8 F
