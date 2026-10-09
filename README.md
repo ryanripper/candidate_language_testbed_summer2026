@@ -164,7 +164,7 @@ Each analysis folder carries its own `scripts/` (numbered pipeline), `outputs/`,
 | `ws2-topic-bakeoff` | ✓ | ✓ | ✓ | `ws2-writeup.md` |
 | `ws3-llm-scaling` | ✓ | ✓ | ✓ | `ws3-writeup.md` |
 | `ws4-preanalysis` | ✓ | | ✓ | `ws4-preanalysis-writeup.md` |
-| `ws4-supervised` | ✓ | ✓ | ✓ | *(pending unseal)* |
+| `ws4-supervised` | ✓ | ✓ | ✓ | `ws4-writeup.md` |
 | `synthesis` | ✓ | | | `synthesis-writeup.md` |
 
 The gaps are deliberate rather than oversights: `00-embeddings-pca` is the pre-harness pilot and predates the protocol, while `ws4-preanalysis` and `synthesis` are respectively truth-visible and post-hoc, so neither had a blind result to pre-register.
@@ -195,7 +195,7 @@ Read these before quoting any number above.
 
 ## Status
 
-WS0–WS3 and the synthesis stage are complete. WS4 (supervised prediction of planted ideology) is in progress: the informal preanalysis found that **every feature space saturates the generator ceiling under light ridge supervision** (out-of-fold r = .966–.973 against a ceiling of ≈ .973), which moved the WS4 questions away from raw accuracy toward label efficiency, text scarcity, incumbent→challenger transfer, and cross-family ensembles. The certified workstream (`analyses/ws4-supervised/`, plan in `docs/plans/ws4-supervised-plan.md`) is preregistered with a DEV/TEST candidate split and DEV-only label release; feature spaces and the E4.1 development probes are done, and **TEST labels remain sealed** pending the remaining experiments.
+WS0–WS4 and the synthesis stage are complete. WS4 (supervised prediction of planted ideology) was unsealed on 2026-10-09 after a preregistered DEV/TEST candidate split with DEV-only label release and label-free prediction freezing; **six of seven preregistered bars were met** (certified probes, label efficiency, text scarcity, incumbent→challenger transfer, cross-family stacking, conformal coverage) and one was not (active learning). The informal preanalysis had already found that **every feature space saturates the generator ceiling under light ridge supervision**; the certified result is that supervision buys calibration, a small certified ensemble gain (stack r = .986, +.005 [+.003, +.007] over the best single probe) and a transfer guarantee across the incumbent/challenger boundary, but not accuracy over the zero-label TF-IDF axis (.976 on TEST) — and that conformal intervals calibrated on full timelines under-cover badly (.68–.76 at nominal .90) on 25-tweet timelines. Details: `analyses/ws4-supervised/` (`README.md`, `ws4-writeup.md`, `article_draft.md`).
 
 ## Tech stack
 

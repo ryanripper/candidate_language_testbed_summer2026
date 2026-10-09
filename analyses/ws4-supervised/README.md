@@ -6,16 +6,25 @@ before label release; Addendum A dated the same day, pre-unseal; Addendum B
 dated 2026-09-10, pre-unseal — adds E4.7 conformal coverage and E4.8 active
 learning, seed 20260910).
 
-**Status (2026-09-15): session 2 of 3 complete.** Scripts 03–06, 08, 09 run
-on DEV; figure specs frozen (`figure_specs.md`); every frozen model's TEST
-predictions computed label-free by `07a_freeze_predictions.py`
-(`intermediate/test_predictions.joblib`, 7,416 arrays); `07_unseal_evaluate.py`
-written and dry-run against DEV (`intermediate/dryrun/`, never opened the
-sealed file). Addendum C (implementation clarifications) added to the
-preregistration. **TEST labels are still sealed** — `seal_manifest.json` has no
-`ws4_unseal` entry and `outputs/decision.json` does not exist.
-Session 3 = `python 07_unseal_evaluate.py --unseal` → `10_figures.py` →
-`ws4-writeup.md` → `article_draft.md`.
+**Status (2026-10-09): COMPLETE — TEST unsealed.** `07_unseal_evaluate.py --unseal`
+ran once on 2026-10-09 (`seal_manifest.json` has the `ws4_unseal` entry;
+`outputs/decision.json` is the record; console in `outputs/unseal_log.txt`).
+**Six of seven preregistered bars met; E4.8 (active learning) not met.**
+Figures from the frozen specs are in `figures/` (`10_figures.py`); narrative in
+[`ws4-writeup.md`](ws4-writeup.md), article in [`article_draft.md`](article_draft.md).
+Any further TEST contact is exploratory (D9) and none has been run.
+
+## Headline TEST results (n = 303, single read)
+
+| Exp | Bar | TEST | Verdict |
+|---|---|---|---|
+| E4.1 | ridge TF-IDF, doc2vec ≥ .965 | .974 / .974 (m2v .982, m2v_strip .975, w2v .970, behav .967; zero-label TF-IDF PC1 **.976**) | met |
+| E4.2 | ≥ 1 space n\* ≤ 40 | behav 40; doc2vec/m2v/m2v_strip/w2v 160; **TF-IDF 320** | met (behav only) |
+| E4.3 | content ≥ .90 at k = 25 | .938 (TF-IDF), .934 (doc2vec); LLM on TEST∩150 .973 | met |
+| E4.4 | incumbent→challenger \|Δr\| < .01, CI ∋ 0 | TF-IDF −.002 [−.007, +.002]; doc2vec +.002 [−.003, +.007] | met |
+| E4.5 | stack beats best single and behav ref | stack_all **.986**; +.005 [+.003, +.007] vs m2v; +.017 [+.011, +.024] vs behav | met |
+| E4.7 | coverage at α = .10 in [.86, .94] | TF-IDF .914, doc2vec .931; **k = 25 shift → .68–.76** | met |
+| E4.8 | diversity/hybrid n\*_AL ≤ .75 × random AND AULC Δ > 0 | no content space reaches n\*_AL by 60; only TF-IDF-uncertainty beats random (+.050) | **not met** |
 
 ## Protocol
 
@@ -23,7 +32,7 @@ Session 3 = `python 07_unseal_evaluate.py --unseal` → `10_figures.py` →
 |---|---|---|
 | Split | `ws0-harness/ws4_splits.json` — DEV 607 / TEST 303 (2:1), stratified party × chamber × incumbent × blind-TF-IDF tercile; inner 5-fold within DEV (121–122 each); seed 20260908 | none (blind) |
 | Labels | `ws0-harness/ws4_dev_labels.parquet` — `true_ideology` for DEV only; hash in `seal_manifest.json` | read #1 (`06_label_release.py`) |
-| Evaluation | `scripts/07_unseal_evaluate.py` (not yet written) | read #2 — once |
+| Evaluation | `scripts/07_unseal_evaluate.py` | read #2 — done 2026-10-09 |
 
 ## Scripts
 
@@ -39,8 +48,8 @@ Session 3 = `python 07_unseal_evaluate.py --unseal` → `10_figures.py` →
 | 08 | `08_conformal.py` | DEV | done — q̂ table `outputs/e47_qhat.json` (all-DEV and incumbent-calibrated); LOFO coverage sanity |
 | 09 | `09_active_learning.py` | DEV | done — 4 strategies × 4 spaces × 100 curves; n = 40 picks `outputs/e48_n40_picks.json` |
 | 07a | `07a_freeze_predictions.py` | DEV | done — label-free TEST predictions for every frozen model → `intermediate/test_predictions.joblib` (Addendum C) |
-| 07 | `07_unseal_evaluate.py` | **TEST, once** | written + dry-run; **not yet run with `--unseal`** — fits nothing, scores the frozen arrays, writes `decision.json` + manifest entry |
-| 10 | `10_figures.py` | — | todo (specs frozen in `figure_specs.md`) |
+| 07 | `07_unseal_evaluate.py` | **TEST, once** | **run 2026-10-09** — fits nothing, scored the frozen arrays, wrote `decision.json`, `outputs/e4*_test*.csv` + manifest entry |
+| 10 | `10_figures.py` | — | done — `figures/fig0–fig8` from `figure_specs.md`; reads only 07 outputs + allowed DEV context |
 
 **Pipeline order** (Addendum B §B.3: 08 and 09 run *before* 07; numbering
 after 07 marks them as additions, not as post-unseal steps):
@@ -57,7 +66,7 @@ Seeds: `ws4lib.SEED = 20260908` for everything preregistered on 2026-09-08
 (splits, draws in 03–06, paired bootstrap §3); `ws4lib.SEED_B = 20260910` for
 the Addendum B draws in 08/09 only.
 
-## E4.1 on DEV (out-of-fold, ridge unless noted) — development numbers, not the certified result
+## E4.1 on DEV (out-of-fold, ridge unless noted) — development numbers, not the certified result (TEST numbers: `ws4-writeup.md`)
 
 | space | r | note |
 |---|---|---|
