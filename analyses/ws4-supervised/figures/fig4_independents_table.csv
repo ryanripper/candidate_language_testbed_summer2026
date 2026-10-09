@@ -1,0 +1,13 @@
+space,learner,ind_n,ind_r,ind_rmse,shift_r_nonind
+tfidf,ridge,9.0,0.916,0.187,0.968
+tfidf,gbm,9.0,0.958,0.141,0.969
+w2v,ridge,9.0,0.948,0.155,0.967
+w2v,gbm,9.0,0.962,0.148,0.926
+doc2vec,ridge,9.0,0.878,0.221,0.967
+doc2vec,gbm,9.0,0.825,0.255,0.866
+m2v,ridge,9.0,0.939,0.171,0.971
+m2v,gbm,9.0,0.943,0.168,0.923
+behav,ridge,9.0,0.98,0.092,0.97
+behav,gbm,9.0,0.969,0.106,0.972
+m2v_strip,ridge,9.0,0.912,0.201,0.969
+m2v_strip,gbm,9.0,0.863,0.214,0.917
