@@ -163,7 +163,9 @@ def main() -> None:
         ("w2v corrected between/within ratio", wb_corr["ratio"], 1.35),
         ("TF-IDF between/within ratio  [NEW at WS0.4]", wb_tfidf["ratio"], np.nan),
     ]
-    pd.DataFrame(rows, columns=["measure", "ws0_value", "frozen_0720_value"]).to_csv(
+    # Rounded so a re-run on another machine is idempotent: the raw floats
+    # differ at the 1e-16 digit across BLAS builds and dirtied the tree.
+    pd.DataFrame(rows, columns=["measure", "ws0_value", "frozen_0720_value"]).round(10).to_csv(
         BASE / "baseline_validation.csv", index=False)
     print(f"  TF-IDF distance validity (new reference): {dv_tfidf:+.4f}")
     print(f"  TF-IDF between/within ratio (new reference): {wb_tfidf['ratio']:.3f}")

@@ -141,7 +141,7 @@ CI (GitHub Actions) runs both on Python 3.10 and 3.12 for every push and pull re
 │   ├── ws4-preanalysis/               static-embedding bake-off (w2v, GloVe,
 │   │                                  fastText, doc2vec) — informal, truth-visible
 │   ├── ws4-supervised/                supervised ideology prediction — preregistered,
-│   │                                  DEV/TEST label release; in progress
+│   │                                  DEV/TEST label release; unsealed 2026-10-09
 │   └── synthesis/                     agreement matrix, Mantel/Procrustes,
 │                                      divergence cases, consolidated table
 ├── tests/                             pytest suite: metrics, generator,
@@ -171,7 +171,7 @@ The gaps are deliberate rather than oversights: `00-embeddings-pca` is the pre-h
 
 ### Not included in this repository
 
-Roughly 106 MB of derived binary artifacts are excluded to keep the repo cloneable: WS1's 16 distance matrices and candidate representations, WS2's two per-topic distance tensors, the WS0 sealed-corpus parquets and baseline distance matrices, and WS4's feature matrices. `ws0-harness/`, `ws1-sentence-transformers/`, `ws2-topic-bakeoff/`, and `ws4-preanalysis/` each carry a `REGENERATE.md` naming the exact script that rebuilds each file; `.gitignore` also lists every excluded path against the script that produces it. All CSV/JSON results, all figures, all scripts, all manifests, and the source corpus are committed.
+Roughly 106 MB of derived binary artifacts are excluded to keep the repo cloneable: WS1's 16 distance matrices and candidate representations, WS2's two per-topic distance tensors, the WS0 sealed-corpus parquets and baseline distance matrices, and WS4's feature matrices — plus intermediates that were never committed (WS3's deterministic prompt batches, WS4-supervised's ~1 GB `intermediate/` caches). `ws0-harness/` and every `analyses/ws*` folder carry a `REGENERATE.md` naming the exact script that rebuilds each file; `.gitignore` also lists every excluded path against the script that produces it. The WS0 sealed views, A/B split, and n = 150 subsample are additionally content-pinned in `ws0-harness/pins.py`, so a fresh clone verifies against the 2026-07-25 harness rather than against its own regenerated manifest. All CSV/JSON results, all figures, all scripts, all manifests, and the source corpus are committed.
 
 Also omitted: a technical writing sample PDF and an annotated companion, both job-application artifacts rather than research outputs.
 
