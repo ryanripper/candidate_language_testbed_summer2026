@@ -27,6 +27,7 @@ import numpy as np
 import pandas as pd
 
 import metrics
+import pins
 
 HERE = Path(__file__).resolve().parent
 BASE = HERE / "baselines"
@@ -165,14 +166,23 @@ def main() -> None:
     check("A/B covers every tweet exactly once",
           len(ab) == len(blind) and ab["tweet_id"].is_unique
           and set(ab["tweet_id"]) == set(blind["tweet_id"]))
-    check("A/B file hash matches splits.json",
-          sha256(HERE / "tweet_split_ab.parquet") == splits["tweet_ab_split"]["sha256"])
+    # Content pin (not file bytes): parquet hashes drift with pyarrow versions,
+    # but the assignment itself must be the 2026-07-25 one.
+    check("A/B assignment matches pinned 2026-07-25 content hash",
+          pins.ab_content_sha256(ab) == pins.AB_CONTENT_SHA256)
+    if sha256(HERE / "tweet_split_ab.parquet") != splits["tweet_ab_split"]["sha256"]:
+        print("  [note] parquet file hash differs from splits.json (serialization "
+              "drift; content pin above is what matters)")
     check("every candidate has both A and B",
           ab.groupby("candidate_id")["split"].nunique().min() == 2)
     check("no candidate lost all retweets in B",
           splits["tweet_ab_split"]["candidates_with_zero_retweets_in_B"]
           == int((meta["share_retweets"] == 0).sum()))
     sub_ids = splits["subsample_150"]["candidate_ids"]
+    # Identity pin: the n=150 draw every WS2/WS3/synthesis result used. A
+    # structurally valid but different subsample must FAIL here (2026-10-30).
+    check("subsample_150 ids match pinned 2026-07-25 draw",
+          pins.ids_sha256(sub_ids) == pins.SUBSAMPLE_IDS_SHA256)
     sub = meta[meta["candidate_id"].isin(sub_ids)]
     check("subsample size ≈ 150", 145 <= len(sub_ids) <= 155,
           f"n={len(sub_ids)}")

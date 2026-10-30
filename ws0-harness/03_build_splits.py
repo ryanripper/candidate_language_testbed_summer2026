@@ -17,11 +17,21 @@ anything. Cannot be retrofitted later without invalidating held-out claims.
 Deterministic: seed 20260725 (session convention), candidates and tweets
 processed in sorted order.
 
+FROZEN (2026-10-30): the committed splits.json is the canonical 2026-07-25
+draw and is what every workstream built on. By default this script now
+regenerates tweet_split_ab.parquet (which reproduces exactly) and only
+REPORTS whether the recomputed subsample matches the committed one — it does
+not touch splits.json. The subsample is known NOT to reproduce (a tercile-
+boundary candidate in axis_scores.csv flips; see pins.py). Pass --force to
+overwrite splits.json anyway; that invalidates comparability with every
+published n=150 result and 04_verify_harness.py will fail.
+
 Outputs:
   splits.json            subsample ids + strata + A/B summary + file hashes
   tweet_split_ab.parquet tweet_id, candidate_id, split ("A"/"B")
 """
 
+import argparse
 import hashlib
 import json
 from datetime import date
@@ -29,6 +39,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+import pins
 
 HERE = Path(__file__).resolve().parent
 SEED = 20260725
@@ -91,7 +103,7 @@ def stratified_subsample(meta: pd.DataFrame, scores: pd.DataFrame,
     return pd.concat(chosen).sort_values("candidate_id").reset_index(drop=True)
 
 
-def main() -> None:
+def main(force: bool = False) -> None:
     rng = np.random.default_rng(SEED)
     blind = pd.read_parquet(HERE / "blind_corpus.parquet")
     meta = pd.read_csv(HERE / "baselines" / "candidate_metadata.csv")
@@ -146,7 +158,22 @@ def main() -> None:
             "candidate_ids": sub["candidate_id"].tolist(),
         },
     }
-    with open(HERE / "splits.json", "w") as fh:
+    splits_path = HERE / "splits.json"
+    ab_ok = pins.ab_content_sha256(ab) == pins.AB_CONTENT_SHA256
+    sub_ok = pins.ids_sha256(sub["candidate_id"]) == pins.SUBSAMPLE_IDS_SHA256
+    print(f"A/B assignment matches 2026-07-25 pin: {'yes' if ab_ok else 'NO'}")
+    print(f"subsample_150 matches 2026-07-25 pin: {'yes' if sub_ok else 'NO'}")
+    if splits_path.exists() and not force:
+        committed = json.load(open(splits_path))["subsample_150"]["candidate_ids"]
+        overlap = len(set(committed) & set(sub["candidate_id"]))
+        print(f"splits.json NOT rewritten (committed draw is canonical; "
+              f"recomputed subsample overlaps {overlap}/{len(committed)}). "
+              f"Use --force to overwrite.")
+        return
+    if not (ab_ok and sub_ok):
+        print("WARNING: writing a splits.json that differs from the frozen "
+              "2026-07-25 draw — results are not comparable to the write-ups.")
+    with open(splits_path, "w") as fh:
         json.dump(splits, fh, indent=2)
 
     print(f"A/B split: {splits['tweet_ab_split']['n_A']:,} A / "
@@ -160,4 +187,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--force", action="store_true",
+                    help="overwrite the committed splits.json (see FROZEN note)")
+    main(force=ap.parse_args().force)
