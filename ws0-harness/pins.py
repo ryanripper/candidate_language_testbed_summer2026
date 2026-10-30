@@ -15,10 +15,17 @@ Hashes are over CONTENT (sorted ids / sorted tweet_id-split pairs), not over
 parquet or json bytes, so they survive pandas/pyarrow serialization drift.
 """
 
+from __future__ import annotations
+
 import hashlib
 from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
-import pandas as pd
+# pandas is imported lazily inside the frame helpers so that ids_sha256 (and
+# the CI test that uses it) work with the slim requirements-ci.txt, which
+# deliberately omits pandas.
+if TYPE_CHECKING:
+    import pandas as pd
 
 # sha256 of ",".join(sorted(subsample_150.candidate_ids)) — the 2026-07-25 draw.
 SUBSAMPLE_IDS_SHA256 = "ae149fe94476e6502c5c955d3c6c3c302c642909afca368c2bc4e09bb8d5b105"
@@ -38,6 +45,8 @@ SEALED_CONTENT_SHA256 = "7b2de0e9d1181101efb1a731bceecfb9fee55e8aa263e2ee7efc5c1
 def frame_sha256(df: pd.DataFrame) -> str:
     """Order-invariant content hash of a tweet-level frame (rows sorted by
     tweet_id, index ignored; per-row hashes from pandas, so dtype-exact)."""
+    import pandas as pd
+
     df = df.sort_values("tweet_id").reset_index(drop=True)
     row_hashes = pd.util.hash_pandas_object(df, index=False).to_numpy()
     return hashlib.sha256(row_hashes.tobytes()).hexdigest()
