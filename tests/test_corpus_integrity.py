@@ -89,3 +89,10 @@ def test_party_composition_matches_readme(rows):
         parties[r["candidate_id"]] = r["party"]
     counts = {p: list(parties.values()).count(p) for p in ("D", "R", "I")}
     assert counts == {"D": 433, "R": 447, "I": 30}
+
+
+def test_manifest_keeps_downstream_entries(manifest):
+    # 01_seal_corpus.py used to rebuild the manifest from scratch and drop
+    # these; a plain rebuild must now leave the manifest untouched.
+    assert "ws4_label_release" in manifest
+    assert "ws4_unseal" in manifest

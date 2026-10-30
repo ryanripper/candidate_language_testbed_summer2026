@@ -18,6 +18,13 @@ once per workstream, at the validation step named in its preregistration.md.
 
 Session seed convention: 20260725 (run date). The seal itself is
 deterministic — no randomness here.
+
+Rebuild semantics (2026-10-30): a plain run rebuilds the two parquet views
+and verifies their CONTENT against the pins in pins.py; if they match it
+leaves the committed seal_manifest.json untouched (parquet byte hashes drift
+with pandas/pyarrow, and the manifest also carries downstream entries such
+as ws4_label_release / ws4_unseal that must not be lost). Only --reseal
+rewrites the manifest, and even then it preserves keys it does not own.
 """
 
 import hashlib
@@ -27,6 +34,8 @@ from datetime import date
 from pathlib import Path
 
 import pandas as pd
+
+import pins
 
 HERE = Path(__file__).resolve().parent
 DATA = (
@@ -80,14 +89,28 @@ def main() -> None:
     blind.to_parquet(blind_path, index=False, compression="zstd")
     sealed.to_parquet(sealed_path, index=False, compression="zstd")
 
-    # On a plain rebuild (same source, no --reseal) the parquet hashes may
-    # legitimately change with pandas/pyarrow versions; refresh them but
-    # preserve the original seal date so the seal's provenance is not
-    # silently re-stamped.
-    manifest = {
-        "sealed_on": (prior["sealed_on"] if prior is not None and not reseal
-                      else date.today().isoformat()),
-        "rebuilt_on": date.today().isoformat(),
+    blind_ok = pins.frame_sha256(blind) == pins.BLIND_CONTENT_SHA256
+    sealed_ok = pins.frame_sha256(sealed) == pins.SEALED_CONTENT_SHA256
+    print(f"blind_corpus content matches 2026-07-25 pin : {'yes' if blind_ok else 'NO'}")
+    print(f"sealed_truth content matches 2026-07-25 pin : {'yes' if sealed_ok else 'NO'}")
+
+    if prior is not None and not reseal:
+        if not (blind_ok and sealed_ok):
+            sys.exit("ERROR: rebuilt parquet content differs from the pinned seal "
+                     "although the source corpus hash matched — investigate before "
+                     "trusting any downstream number. Manifest left untouched.")
+        if (sha256(blind_path) != prior["blind_corpus"]["sha256"]
+                or sha256(sealed_path) != prior["sealed_truth"]["sha256"]):
+            print("note: parquet byte hashes differ from seal_manifest.json "
+                  "(serialization drift only — content pins verified).")
+        print("seal_manifest.json left unchanged (plain rebuild).")
+        return
+
+    # --reseal (or first-ever seal): write the manifest, re-stamping the
+    # date, but carry over any keys this script does not own (ws4_* etc.).
+    manifest = dict(prior) if prior is not None else {}
+    manifest.update({
+        "sealed_on": date.today().isoformat(),
         "source_file": DATA.name,
         "source_sha256": sha256(DATA),
         "blind_corpus": {
@@ -108,7 +131,7 @@ def main() -> None:
             "is opened once per workstream at the validation step declared in "
             "its preregistration.md, written BEFORE unsealing."
         ),
-    }
+    })
     with open(HERE / "seal_manifest.json", "w") as fh:
         json.dump(manifest, fh, indent=2)
 

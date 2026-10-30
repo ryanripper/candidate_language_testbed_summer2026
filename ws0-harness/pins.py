@@ -28,6 +28,21 @@ SUBSAMPLE_IDS_SHA256 = "ae149fe94476e6502c5c955d3c6c3c302c642909afca368c2bc4e09b
 AB_CONTENT_SHA256 = "fcd67ab82d87c7939c97a35f83395029635492b9ab1c82c3cab8b4822602421a"
 
 
+# Content hashes of the 2026-07-25 sealed parquet views (see frame_sha256).
+# Both reproduce exactly from 01_seal_corpus.py; only the parquet BYTES drift
+# with pandas/pyarrow versions.
+BLIND_CONTENT_SHA256 = "129a7062cdf6198d1d7bd4ee9c0e17b7ebdc84a5a9d25f586f61a3424ca2e6e8"
+SEALED_CONTENT_SHA256 = "7b2de0e9d1181101efb1a731bceecfb9fee55e8aa263e2ee7efc5c1eca54c8db"
+
+
+def frame_sha256(df: pd.DataFrame) -> str:
+    """Order-invariant content hash of a tweet-level frame (rows sorted by
+    tweet_id, index ignored; per-row hashes from pandas, so dtype-exact)."""
+    df = df.sort_values("tweet_id").reset_index(drop=True)
+    row_hashes = pd.util.hash_pandas_object(df, index=False).to_numpy()
+    return hashlib.sha256(row_hashes.tobytes()).hexdigest()
+
+
 def ids_sha256(ids: Iterable[str]) -> str:
     return hashlib.sha256(",".join(sorted(map(str, ids))).encode()).hexdigest()
 

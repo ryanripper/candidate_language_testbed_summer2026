@@ -84,10 +84,18 @@ def main() -> None:
           manifest["source_sha256"] == SOURCE_SHA256)
     check("no true_* columns in blind corpus",
           not any(c.startswith("true_") for c in blind.columns))
-    check("blind corpus hash matches manifest",
-          sha256(HERE / "blind_corpus.parquet") == manifest["blind_corpus"]["sha256"])
-    check("sealed truth hash matches manifest",
-          sha256(HERE / "sealed_truth.parquet") == manifest["sealed_truth"]["sha256"])
+    # Content pins (not file bytes): parquet hashes drift with pyarrow
+    # versions; what must hold is that the views are the 2026-07-25 ones.
+    check("blind corpus content matches pinned 2026-07-25 seal",
+          pins.frame_sha256(blind) == pins.BLIND_CONTENT_SHA256)
+    check("sealed truth content matches pinned 2026-07-25 seal",
+          pins.frame_sha256(sealed) == pins.SEALED_CONTENT_SHA256)
+    if (sha256(HERE / "blind_corpus.parquet") != manifest["blind_corpus"]["sha256"]
+            or sha256(HERE / "sealed_truth.parquet") != manifest["sealed_truth"]["sha256"]):
+        print("  [note] parquet byte hashes differ from seal_manifest.json "
+              "(serialization drift; content pins above are what matter)")
+    check("manifest keeps downstream entries (ws4_label_release, ws4_unseal)",
+          "ws4_label_release" in manifest and "ws4_unseal" in manifest)
     check("row alignment blind vs sealed",
           len(blind) == len(sealed)
           and (blind["tweet_id"].to_numpy() == sealed["tweet_id"].to_numpy()).all())
